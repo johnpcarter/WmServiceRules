@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <jardesc>
     <jar path="/Applications/SoftwareAG/10.11/IntegrationServer/instances/default/packages/WxServiceAlerts/code/jars/simple-rules.jar"/>
-    <options buildIfNeeded="true" compress="false" descriptionLocation="/SimpleRules/export-wm.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <options buildIfNeeded="true" compress="false" descriptionLocation="/WmServiceRules/export-wm.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
     <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
     <selectedProjects/>
     <manifest generateManifest="true" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
@@ -11,7 +11,6 @@
         </sealing>
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
-        <file path="/SimpleRules/.classpath"/>
-        <javaElement handleIdentifier="=SimpleRules/src"/>
+        <javaElement handleIdentifier="=WmServiceRules/src"/>
     </selectedElements>
 </jardesc>
