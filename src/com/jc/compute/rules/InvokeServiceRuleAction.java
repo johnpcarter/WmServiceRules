@@ -57,13 +57,17 @@ public class InvokeServiceRuleAction<T> implements RuleAction<T> {
 			IDataUtil.put(sc, "time", s.time);
 			
 			IData[] values = new IData[s.values.size()];
-			for (String e : s.values.keySet()) {
+			int z = 0;
+			for (Snapshot<T>.Value v : s.values) {
 				IData vi = IDataFactory.create();
 				IDataCursor vic = vi.getCursor();
-				IDataUtil.put(vic, "event", e);
-				IDataUtil.put(c, "value", s.values.get(e));
-				IDataUtil.put(c, "didFire", s.firedEventTypes != null && s.firedEventTypes.contains(e));
+				IDataUtil.put(vic, "event", v.eventType.toString());
+				IDataUtil.put(vic, "source", v.source.toString());
+				IDataUtil.put(vic, "value", v.value);
+				IDataUtil.put(c, "didFire", s.firedEventTypes != null && s.firedEventTypes.contains(v.eventType));
 				vic.destroy();
+				
+				values[z++] = vi;
 			}
 			
 			IDataUtil.put(sc, "values", values);
@@ -83,7 +87,7 @@ public class InvokeServiceRuleAction<T> implements RuleAction<T> {
 		}
 	}
 
-	private static boolean invokeService(IData inputPipeline, String ns, String svc, boolean ignoreErrors) throws UnknownServiceException, ServiceException 
+	public static boolean invokeService(IData inputPipeline, String ns, String svc, boolean ignoreErrors) throws UnknownServiceException, ServiceException 
     {
     	 try 
          {

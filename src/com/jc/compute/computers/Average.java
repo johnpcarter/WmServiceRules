@@ -2,66 +2,107 @@ package com.jc.compute.computers;
 
 import com.jc.compute.Computer;
 import com.jc.compute.Rule;
+import com.jc.compute.ComputersForNamespace.EventType;
 
 public class Average extends AbstractComputer<Double> {
 
-	private double _total = 0;
+	private Long _total = null;
+	private Long _errorTotal = null;
+	
 	private int _count = 0;
 	
-	public Average(String source, String uom, double value) {
-		super(source, uom);
-		
-		if (value > 0) {
-			_total = value;
-			_count = 1;
-		}
+	public Average(Source source) {
+		super(source);
 	}
 
 	@Override
 	public Computer<Double> copy() {
 		
-		Average t = new Average(_source, _uom, 0);
-		t._namespace = this._namespace;
-		t._running = _running;
+		Average t = new Average(_source);
 
+		if (_total != null)
+			t._total = 0l;
+		
+		if (_errorTotal != null)
+			t._errorTotal = 0l;
+		
 		for (Rule<Double> r : this._rules) {
 			t._rules.add(r.clone());
 		}
 				
 		return t;
 	}
-	
-	@Override
-	public Computer<Double> copy(String key, String eventType) {
-		
-		Average a = (Average) this.copy();
-		
-		a._key = key;
-		a._eventType = eventType;
-		
-		return a;
-	}
 
 	@Override
-	public void add(Double value) {
+	public int type() {
+		return 1;
+	}
+	
+	@Override
+	public boolean includesEventType(EventType eventType) {
 		
-		if (value > 0) {
-			_total += value;
-			_count += 1;
+		return (eventType == EventType.AuditEvent && _total != null) ||
+				(eventType == EventType.ExceptionEvent && _errorTotal != null);
+	}
+	
+	@Override
+	public void addEventType(EventType eventType) {
+	
+		if (eventType == EventType.AuditEvent) {
+			_total = 0l;
+		} else {
+			_errorTotal = 0l;
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
-	Double combined(Double first, Double last) {
+	public EventTypeComputer<Double>[] eventTypes() {
 		
-		return last - first;
+		EventTypeComputer<Double>[] out = null;
+		
+		if (_total == null || _errorTotal == null) {
+			out = new EventTypeComputer[1];
+		} else {
+			out = new EventTypeComputer[2];
+		}
+		
+		int i = 0;
+		
+		if (_total != null)
+			out[i++] = auditEventTypeComputer();
+		
+		if (_errorTotal != null)
+			out[i] = exceptionEventTypeComputer();
+		
+		return out;
+	}
+
+	@Override
+	public void record(EventType eventType, Number value) {
+		
+		if (eventType == EventType.AuditEvent) {
+			this._total += value.longValue();
+		} else {
+			this._errorTotal += value.longValue();
+		}
+		
+		this._count += 1;
 	}
 	
-	@Override
-	public Double computedValue() {
+	protected Double computedValueForAuditEvent() {
 		
 		if (_count > 0) {
-			return _total / _count;
+			return (double) (_total / _count);
+		} else {
+			return 0d;
+		}
+	}
+	
+	protected Double computedValueForExceptionEvent() {
+		
+		if (_count > 0) {
+			return (double) (_errorTotal / _count);
 		} else {
 			return 0d;
 		}

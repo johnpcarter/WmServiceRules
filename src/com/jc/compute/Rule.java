@@ -1,14 +1,19 @@
 package com.jc.compute;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Stack;
 
+import com.jc.compute.ComputersForNamespace.EventType;
+import com.wm.data.IData;
+import com.wm.data.IDataCursor;
+import com.wm.data.IDataFactory;
+import com.wm.data.IDataUtil;
+
 public abstract class Rule<T> {
 
-	protected String _eventType;
+	protected EventType _eventType;
 	protected String _alertType;
 	private int _minOccurrences = 1;
 	private boolean _fired = false;
@@ -18,7 +23,7 @@ public abstract class Rule<T> {
 	protected int _level = 0;
 	protected boolean _sendEmail = false;
 	
-	public Rule(String eventType, RuleAction<T> action, int minOccurrences, boolean isSticky, int level, boolean sendEmail) {
+	public Rule(EventType eventType, RuleAction<T> action, int minOccurrences, boolean isSticky, int level, boolean sendEmail) {
 		
 		_eventType = eventType;
 		_action = action;
@@ -43,28 +48,32 @@ public abstract class Rule<T> {
 		return _fired;
 	}
 	
+	public void clear() {
+		_fired = false;
+	}
+	
 	public int violationLevel() {
 		return _level;
 	}
 	
-	public boolean apply(Computer<T> computer, Stack<Snapshot<T>> collatedValues) {
+	public boolean apply(Computer<T> computer, Stack<Snapshot<T>> collatedValues, EventType eventType) {
 		
 		String message = null;
 		
-		if (allow(computer)) {
-			if ((message=applyRule(computer, allValuesCollectionInterval(collatedValues))) != null) {
+		if (allow(computer, eventType)) {
+			if ((message=applyRule(computer, allValuesCollectionInterval(computer, eventType, collatedValues))) != null) {
 				
 				Snapshot<T> last = collatedValues.lastElement();
 				
 				last.violationLevel = this._level;
 				
 				if (_minOccurrences <= 1 || doOccurrencesExceedMinimum(collatedValues)) {
-					_action.run(computer.computedValue(), collatedValues, message, levelToSeverity(), this._alertType, _sendEmail);
+					_action.run(computer.computedValue(eventType), collatedValues, message, levelToSeverity(), this._alertType, _sendEmail);
 					_fired = true;
 					last.didFireARule = true;
 					
 					if (last.firedEventTypes == null)
-						last.firedEventTypes = new HashSet<String>();
+						last.firedEventTypes = new HashSet<EventType>();
 					
 					last.firedEventTypes.add(this._eventType);
 					
@@ -82,13 +91,15 @@ public abstract class Rule<T> {
 		return false;
 	}
 	
-	private List<T> allValuesCollectionInterval(Stack<Snapshot<T>> collatedValues) {
+	private List<T> allValuesCollectionInterval(Computer<T> computer, EventType eventType, Stack<Snapshot<T>> collatedValues) {
 	
 		List<T> aggregate = new ArrayList<T>();
 		
-		for (T o : collatedValues.lastElement().values.values()) {
-			
-			aggregate.add(o);
+		for (Snapshot<T>.Value o : collatedValues.lastElement().values) {
+						
+			if (o.source == computer.source() && o.eventType.equals(eventType) && o.type == computer.type()) {
+				aggregate.add(o.value);
+			}
 		}
 		
 		return aggregate;
@@ -107,15 +118,15 @@ public abstract class Rule<T> {
 		return count >= _minOccurrences;
 	}
 	
-	private boolean allow(Computer<T> computer) {
+	private boolean allow(Computer<T> computer, EventType eventType) {
 	
-		return !_fired && computer.eventType().equals(this._eventType) && (System.getProperty("watt.wx.service.alerts.active") == null || !System.getProperty("watt.wx.service.alerts.active").equalsIgnoreCase("false"));
+		return !_fired && eventType.equals(this._eventType) && (System.getProperty("watt.wx.service.alerts.active") == null || !System.getProperty("watt.wx.service.alerts.active").equalsIgnoreCase("false"));
 	}
 	
 	private String levelToSeverity() {
 		
 		if (_level == 0) {
-			return "Info";
+			return "Information";
 		} else if (_level == 1) {
 			return "Warning";
 		} else if (_level == 2) {
@@ -132,4 +143,20 @@ public abstract class Rule<T> {
 	public abstract String description();
 	
 	public abstract String applyRule(Computer<T> computer, List<T> otherValues);
+	
+	public IData toIData() {
+		
+		IData out = IDataFactory.create();
+		IDataCursor c = out.getCursor();
+		IDataUtil.put(c, "alertType", this.alertType());
+		IDataUtil.put(c, "evenType", this._eventType);
+		IDataUtil.put(c, "level", this.levelToSeverity());
+		IDataUtil.put(c, "description", this.description());
+		IDataUtil.put(c, "isSticky", "" + this._sticky);
+		IDataUtil.put(c, "didFire", "" + this._fired);
+
+		c.destroy();
+		
+		return out;
+	}
 }

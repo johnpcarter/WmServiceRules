@@ -3,22 +3,23 @@ package com.jc.compute.rules;
 import java.util.List;
 
 import com.jc.compute.Computer;
+import com.jc.compute.ComputersForNamespace.EventType;
 import com.jc.compute.Rule;
 import com.wm.app.b2b.server.ServiceException;
 
-public class MaxValueExceededRule extends Rule<Double> {
+public class MaxValueExceededRule extends Rule<Number> {
 
 	private Double _maxValue;
 	
-	public MaxValueExceededRule(String eventType, String alertType, String service, int minOccurrences, Double maxValue, boolean isSticky, int level, boolean sendEmail) throws ServiceException {
+	public MaxValueExceededRule(EventType eventType, String alertType, String service, int minOccurrences, Double maxValue, boolean isSticky, int level, boolean sendEmail) throws ServiceException {
 		
-		super(eventType, new InvokeServiceRuleAction<Double>(service), minOccurrences, isSticky, level, sendEmail);
+		super(eventType, new InvokeServiceRuleAction<Number>(service), minOccurrences, isSticky, level, sendEmail);
 		_alertType = alertType;
 		_maxValue = maxValue;
 	}
 
 	@Override
-	public Rule<Double> clone() {
+	public Rule<Number> clone() {
 		
 		try {
 			return new MaxValueExceededRule(this._eventType, this._alertType, _action.namespace(), this.minOccurences(), this._maxValue, this._sticky, this._level, this._sendEmail);
@@ -28,11 +29,11 @@ public class MaxValueExceededRule extends Rule<Double> {
 	}
 	
 	@Override
-	public String applyRule(Computer<Double> computer, List<Double> otherValues) {
+	public String applyRule(Computer<Number> computer, List<Number> otherValues) {
 				
-		Double lastValue = computer.computedValue();
+		Number lastValue = computer.computedValue(_eventType);
 		
-		if (lastValue > _maxValue) {
+		if (lastValue.longValue() > _maxValue) {
 			 return "last value " + lastValue + " exceeded threshhold " + _maxValue + " for " + computer.key();
 
 		} else {

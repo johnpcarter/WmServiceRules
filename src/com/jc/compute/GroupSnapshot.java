@@ -11,7 +11,7 @@ import com.wm.data.IDataCursor;
 import com.wm.data.IDataFactory;
 import com.wm.data.IDataUtil;
 
-public class GroupSnapshot {
+public class GroupSnapshot<T extends Number> {
 		
 	public Date time;
 	
@@ -22,29 +22,29 @@ public class GroupSnapshot {
 		this.time = time;
 	}
 	
-	public void add(String label, Double value) {
+	public void add(String label, T value) {
 		
 		((ArrayList<Value>) this.values).add(new Value(label, value));
 	}
 	
-	public void add(String label, Double value, int violationLevel) {
+	public void add(String label, T value, int violationLevel) {
 		
 		((ArrayList<Value>) this.values).add(new Value(label, value, violationLevel));
 	}
 	
-	public static class Value {
+	public class Value {
 		
-		public Double value;
+		public T value;
 		public String label;
 		public int level = 0;
 		public boolean didFireARule = false;
 		
-		Value(String label, Double value) {
+		Value(String label, T value) {
 			this.label = label;
 			this.value = value;
 		}
 		
-		Value(String label, Double value, int violationLevel) {
+		Value(String label, T value, int violationLevel) {
 			this.label = label;
 			this.value = value;
 			this.didFireARule = true;
@@ -69,12 +69,18 @@ public class GroupSnapshot {
 			IDataUtil.put(vc, "label", v.label);			
 			IDataUtil.put(vc, "violationLevel", v.level);
 			IDataUtil.put(vc,  "didFire", v.didFireARule);
-			IDataUtil.put(vc, "value", (long) Math.rint(v.value));
 			
-			if (scale > 0 && v.value != 0) {
-				IDataUtil.put(vc, "scaledValue", v.value / scale);
+			if (v.value != null) {
+				IDataUtil.put(vc, "value", (long) Math.rint(v.value.doubleValue()));
+				
+				if (scale > 0 && v.value.intValue() != 0) {
+					IDataUtil.put(vc, "scaledValue", v.value.longValue() / scale);
+				} else {
+					IDataUtil.put(vc, "scaledValue", v.value);
+				}
 			} else {
-				IDataUtil.put(vc, "scaledValue", v.value);
+				IDataUtil.put(vc, "value", 0l);
+				IDataUtil.put(vc, "scaledValue", 0l);
 			}
 			
 			IDataUtil.put(vc, "color", colors.get(v.label));

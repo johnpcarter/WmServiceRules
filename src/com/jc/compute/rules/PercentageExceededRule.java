@@ -3,22 +3,23 @@ package com.jc.compute.rules;
 import java.util.List;
 
 import com.jc.compute.Computer;
+import com.jc.compute.ComputersForNamespace.EventType;
 import com.jc.compute.Rule;
 import com.wm.app.b2b.server.ServiceException;
 
-public class PercentageExceededRule extends Rule<Double> {
+public class PercentageExceededRule extends Rule<Number> {
 
 	private Double _maxValue;
 	
-	public PercentageExceededRule(String eventType, String alertType, String service, int minOccurrences, Double maxValue, boolean isSticky, int level, boolean sendEmail) throws ServiceException {
-		super(eventType, new InvokeServiceRuleAction<Double>(service), minOccurrences, isSticky, level, sendEmail);
+	public PercentageExceededRule(EventType eventType, String alertType, String service, int minOccurrences, Double maxValue, boolean isSticky, int level, boolean sendEmail) throws ServiceException {
+		super(eventType, new InvokeServiceRuleAction<Number>(service), minOccurrences, isSticky, level, sendEmail);
 		
 		_alertType = alertType;
 		_maxValue = maxValue;
 	}
 
 	@Override
-	public Rule<Double> clone() {
+	public Rule<Number> clone() {
 		
 		try {
 			return new PercentageExceededRule(this._eventType, this._alertType,  _action.namespace(), this.minOccurences(), this._maxValue, this._sticky, this._level, this._sendEmail);
@@ -28,20 +29,20 @@ public class PercentageExceededRule extends Rule<Double> {
 	}
 	
 	@Override
-	public String applyRule(Computer<Double> computer, List<Double> otherValues) {
+	public String applyRule(Computer<Number> computer, List<Number> otherValues) {
 				
-		Double lastValue = computer.computedValue();
+		Number lastValue = computer.computedValue(_eventType);
 		
 		Double tot = 0d;
 		
-		for (Double o : otherValues) {
-			tot += o;
+		for (Number o : otherValues) {
+			tot += o.longValue();
 		}
 				
 		Double percent = 0d;
 		
 		if (tot > 0)
-			percent = (lastValue / tot) * 100;
+			percent = (lastValue.longValue() / tot) * 100;
 		
 		if (percent >= _maxValue) {
 			 return "last value is " + percent + "% of total, exceeded threshhold " + _maxValue + "% for " + computer.key();

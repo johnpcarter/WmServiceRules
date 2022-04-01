@@ -1,62 +1,34 @@
 package com.jc.compute.computers;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
 import com.jc.compute.Computer;
+import com.jc.compute.ComputersForNamespace.EventType;
 import com.jc.compute.Rule;
 import com.jc.compute.Snapshot;
 
 public abstract class AbstractComputer<T> implements Computer<T> {
 
-	protected String _key;
-	protected String _eventType;
-	protected String _namespace;
-	protected String _source;
-	protected String _uom;
+	protected Source _source;
 	protected boolean _didFire;
 	protected int _violationLevel = 0;
 	
 	protected ArrayList<Rule<T>> _rules = new ArrayList<Rule<T>>();
-	
-	protected HashMap<String, T> _running = new HashMap<String, T>();
-	
-	public AbstractComputer(String source, String uom) {
+			
+	public AbstractComputer(Source source) {
 		_source = source;
-		_uom = uom;
 	}
-
+	
 	@Override
 	public String key() {
-		return _key;
+		return this.getClass().getSimpleName() + _source.toString();
 	}
 	
 	@Override
-	public String eventType() {
-		return _eventType;
-	}
-	
-	@Override
-	public String namespace() {
-		return _namespace;
-	}
-	
-	@Override
-	public void setNamespace(String namespace) {
-		this._namespace = namespace;
-	}
-	
-	@Override
-	public String source() {
+	public Source source() {
 		return _source;
-	}
-	
-	@Override
-	public String uom() {
-		return _uom;
 	}
 	
 	@Override
@@ -83,24 +55,72 @@ public abstract class AbstractComputer<T> implements Computer<T> {
 		return _violationLevel;
 	}
 	
-	@Override
-	public void add(String id, T value, boolean isStartEvent) {
-		
-		if (id != null) {
-				
-			value = getSet(id, value, isStartEvent);
-		}
-		
-		if (value != null) {
-			add(value);
+	public T computedValue(EventType eventType) {
+		if (eventType == EventType.AuditEvent) {
+			return computedValueForAuditEvent();
+		} else {
+			return computedValueForExceptionEvent();
 		}
 	}
 	
-	@Override
-	public boolean applyRules(Stack<Snapshot<T>> collatedValues) {
+	public void clearStickyRule(String ref) {
+	
+		for (Rule<?> r : this._rules) {
+			if (r.description().equals(ref)) {
+				r.clear();
+				break;
+			}
+		}
+	}
+	
+	protected EventTypeComputer<T> auditEventTypeComputer() {
+		
+		
+		return new EventTypeComputer<T>() {
+
+			@Override
+			public EventType eventType() {
+				return EventType.AuditEvent;
+			}
+
+			@Override
+			public T computedValue() {
+				return AbstractComputer.this.computedValueForAuditEvent();
+			}
+
+			@Override
+			public boolean applyRules(Stack<Snapshot<T>> collatedValues) {
+				return AbstractComputer.this.applyRules(collatedValues, EventType.AuditEvent);
+			}
+		};
+	}
+	
+	protected EventTypeComputer<T> exceptionEventTypeComputer() {
+		
+		
+		return new EventTypeComputer<T>() {
+
+			@Override
+			public EventType eventType() {
+				return EventType.ExceptionEvent;
+			}
+
+			@Override
+			public T computedValue() {
+				return AbstractComputer.this.computedValueForExceptionEvent();
+			}
+
+			@Override
+			public boolean applyRules(Stack<Snapshot<T>> collatedValues) {
+				return AbstractComputer.this.applyRules(collatedValues, EventType.ExceptionEvent);
+			}
+		};
+	}
+	
+	protected boolean applyRules(Stack<Snapshot<T>> collatedValues, EventType eventType) {
 				
 		for (Rule<T> r : _rules) {
-			boolean didFire = r.apply(this, collatedValues);
+			boolean didFire = r.apply(this, collatedValues, eventType);
 			
 			if (didFire) {
 				_didFire = true;
@@ -116,18 +136,7 @@ public abstract class AbstractComputer<T> implements Computer<T> {
 		return _didFire;
 	}
 	
-	protected synchronized T getSet(String id, T value, boolean isStartEvent) {
-		
-		if (_running.get(id) != null) {
-			return combined(_running.remove(id), value);
-		} else if (isStartEvent) {
-			_running.put(id, value);
-			return null;
-		} else {
-			return null;
-		}
-	}
-	
-	abstract T combined(T first, T last);
-	
+	protected abstract T computedValueForAuditEvent();
+	protected abstract T computedValueForExceptionEvent();
+
 }
