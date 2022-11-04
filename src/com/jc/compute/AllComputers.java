@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.jc.compute.Computer.Source;
-import com.jc.compute.ComputersForNamespace.ComputersByService;
 import com.jc.compute.ComputersForNamespace.EventType;
 import com.wm.data.IData;
 import com.wm.data.IDataCursor;
@@ -22,7 +21,10 @@ public class AllComputers {
 	
 	private HashMap<Long, ComputersForNamespace> _computersByTimeInterval = new HashMap<Long, ComputersForNamespace>();
 	
-	public void add(long timeInterval, EventType eventType, boolean topLevelServicesOnly, int maxSlots, boolean countZeros, String namespace, Computer<Number> computer, String[] excludeList, String[] includeList, long transactionDuration, String persistService) {
+	private HashMap<String, String> _pipelineAtributesForAuditEvents = new HashMap<String, String>();
+	private HashMap<String, String> _pipelineAtributesForExceptionEvents = new HashMap<String, String>();
+
+	public void add(long timeInterval, EventType eventType, boolean topLevelServicesOnly, int maxSlots, boolean countZeros, String namespace, String pipelineAttribute, Computer<Number> computer, String[] excludeList, String[] includeList, long transactionDuration, String persistService) {
 		
 		ComputersForNamespace cti = _computersByTimeInterval.get(timeInterval);
 		
@@ -31,7 +33,37 @@ public class AllComputers {
 			_computersByTimeInterval.put(timeInterval, cti);
 		}
 		
-		cti.addComputer(eventType, namespace, computer);
+		if (pipelineAttribute != null && pipelineAttribute.length() > 0) {
+			String key = namespace == null ? "*" : namespace;
+			
+			if (eventType != EventType.AuditEvent) {
+				this._pipelineAtributesForAuditEvents.put(key, pipelineAttribute);
+			} else {
+				this._pipelineAtributesForExceptionEvents.put(key, pipelineAttribute);
+			}
+		}
+		
+		cti.addComputer(eventType, namespace, pipelineAttribute, computer);
+	}
+	
+	public String pipelineAttributeForNamespace(EventType eventType, String service) {
+		
+		String key = null;
+		HashMap<String, String> pipelineAtributes = this._pipelineAtributesForAuditEvents;
+		
+		if (eventType != EventType.AuditEvent) {
+			pipelineAtributes = this._pipelineAtributesForExceptionEvents;
+		}
+		
+		for (String namespace : pipelineAtributes.keySet()) {
+						
+			if (namespace.length() == 0 || service.startsWith(namespace)) {
+				key = pipelineAtributes.get(namespace);
+				break;
+			}
+		}
+		
+		return key;
 	}
 	
 	public void clear() {
@@ -41,6 +73,9 @@ public class AllComputers {
 		}
 		
 		_computersByTimeInterval.clear();
+		
+		_pipelineAtributesForAuditEvents.clear();
+		_pipelineAtributesForExceptionEvents.clear();
 	}
 	
 	public Date startTime() {

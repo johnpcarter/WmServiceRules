@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <jardesc>
     <jar path="/Applications/SoftwareAG/10.11/IntegrationServer/instances/default/packages/WxServiceAlerts/code/jars/static/service-stats.jar"/>
-    <options buildIfNeeded="true" compress="false" descriptionLocation="/WmServiceRules/export-wm.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <options buildIfNeeded="true" compress="false" descriptionLocation="/JcServiceStatistics/export-wm.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
     <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
     <selectedProjects/>
     <manifest generateManifest="true" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
@@ -11,6 +11,23 @@
         </sealing>
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
-        <javaElement handleIdentifier="=WmServiceRules/src"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc.compute{RuleAction.java"/>
+        <file path="/JcServiceStatistics/.classpath"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc.compute.rules"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc.compute{ComputersForNamespace.java"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc.compute{Rule.java"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc.compute{Snapshot.java"/>
+        <file path="/JcServiceStatistics/export-wm.jardesc"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc.compute{ServiceHistory.java"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc.compute.computers"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc.compute{Computer.java"/>
+        <file path="/JcServiceStatistics/.gitignore"/>
+        <file path="/JcServiceStatistics/README.md"/>
+        <file path="/JcServiceStatistics/.project"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc.service"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc.compute{AllComputers.java"/>
+        <javaElement handleIdentifier="=JcServiceStatistics/src&lt;com.jc.compute{GroupSnapshot.java"/>
     </selectedElements>
 </jardesc>

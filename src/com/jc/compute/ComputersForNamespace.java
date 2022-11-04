@@ -41,7 +41,7 @@ public class ComputersForNamespace {
 	private boolean _countZeros = true;
 	protected String[] _excludeList;
 	protected HashSet<String> _includeList;
-	protected long _transactionDuration = TransactionDuration;
+	protected long _transactionDuration = TransactionDuration = 3000;
 	
 	private String _persistService = null;
 	
@@ -51,7 +51,6 @@ public class ComputersForNamespace {
 		_topLevelOnly = topLevelServicesOnly;
 		_cleanupThread = new CleanupThread(timeInterval);
 	    _countZeros = countZeros;
-	    _transactionDuration = transactionDuration;
 	    _excludeList = excludeList;
 	    _persistService = persistService;
 	    
@@ -62,7 +61,7 @@ public class ComputersForNamespace {
 			}
 		}
 		
-		if (transactionDuration != -1) 
+		if (transactionDuration > 0) 
 			_transactionDuration = transactionDuration;
 		
 	    _cleanupThread.start();
@@ -76,7 +75,7 @@ public class ComputersForNamespace {
 		return _cleanupThread._timeInterval;
 	}
 	
-	public void addComputer(EventType eventType, String namespace, Computer<Number> c) {
+	public void addComputer(EventType eventType, String namespace, String pipelineAtribute, Computer<Number> c) {
 		
 		ComputersByService ec = _computers.get(namespace);
 		
@@ -181,7 +180,7 @@ public class ComputersForNamespace {
 
 		private HashMap<String, ComputersGroupedSource> _values = new HashMap<String, ComputersGroupedSource>();
 		private HashMap<String, Stack<Snapshot<Number>>> _history = new HashMap<String, Stack<Snapshot<Number>>>();
-				
+		
 		public void addComputer(EventType eventType, Computer<Number> computer) {
 			
 			HashMap<Integer, Computer<Number>> ca = _prototypes.get(computer.source().toString());
@@ -217,7 +216,7 @@ public class ComputersForNamespace {
 		}
 		
 		public boolean record(EventType eventType, Source source, String serviceName, Number value) {
-
+			
 			ComputersGroupedSource ec = _values.get(serviceName);
 			
 			if (ec == null) {
