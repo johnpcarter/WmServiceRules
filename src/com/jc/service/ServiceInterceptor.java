@@ -138,17 +138,14 @@ public class ServiceInterceptor implements InvokeChainProcessor {
 				c.destroy();
 				
 			} else {
+				
+				// will use pipeline value for given key to further index collection (if found)
+
 				String key = AllComputers.instance.pipelineAttributeForNamespace(EventType.AuditEvent, serviceName);
 			
 				if (key != null) {
 					
-					// will use pipeline value for given key to further index collection (if found)
-				
-					IDataCursor c = pipeline.getCursor();
-					Object v = IDataUtil.get(c, key);
-					c.destroy();
-					
-					//System.out.println("*************** Looked up key '" + key + "' got '" + v + "'");
+					Object v = findValueInPipelineForKey(key, pipeline);
 				
 					if (v != null) {
 						serviceName += ":" + v;
@@ -188,35 +185,65 @@ public class ServiceInterceptor implements InvokeChainProcessor {
 		return baseService.getNSName().getFullName();
 	}
 	
-	protected String[] getContextIDsForService() 
-	    {
-	        String[] contextIDs = {null, null, null};
+	protected String[] getContextIDsForService() {
+	        
+		String[] contextIDs = {null, null, null};
 
-	        try {
-	            InvokeState currentInvokeState = InvokeState.getCurrentState();
-	            //Stack<?> servicesStack = currentInvokeState.getCallStack();
-	            String contextIDStack[] = currentInvokeState.getAuditRuntime().getContextStack();
+	    try {
+	    	InvokeState currentInvokeState = InvokeState.getCurrentState();
+	        //Stack<?> servicesStack = currentInvokeState.getCallStack();
+	        String contextIDStack[] = currentInvokeState.getAuditRuntime().getContextStack();
 
-	            String contextId = null;
-	            String parentContextId = null;
-	            String rootContextId = null;
+	        String contextId = null;
+	        String parentContextId = null;
+	        String rootContextId = null;
 
-	            int contextId_index = contextIDStack.length - 1;
+	        int contextId_index = contextIDStack.length - 1;
 
 
-	            contextId = contextIDStack[contextId_index];
-	            if (contextId_index > 0) {
-	                parentContextId = contextIDStack[contextId_index - 1];
-	            }
-	            rootContextId = contextIDStack[0];
+	        contextId = contextIDStack[contextId_index];
+	        if (contextId_index > 0) {
+	        	parentContextId = contextIDStack[contextId_index - 1];
+	        }
+	            
+	        rootContextId = contextIDStack[0];
 
-	            contextIDs[0] = contextId;
-	            contextIDs[1] = parentContextId;
-	            contextIDs[2] = rootContextId;
+	        contextIDs[0] = contextId;
+	        contextIDs[1] = parentContextId;
+	        contextIDs[2] = rootContextId;
 	        } catch (Exception e) {
 	            throw new RuntimeException(e);
 	        }
 
 	        return contextIDs;
-	    }
+	}
+	
+	private Object findValueInPipelineForKey(String key, IData pipeline) {
+		
+		if (key.indexOf(".") != -1) {
+		
+			Object v = null;
+			
+			String fpart = key.substring(0, key.indexOf("."));
+			String lpart = key.substring(key.indexOf(".")+1);
+			
+			IDataCursor c = pipeline.getCursor();
+			Object p = IDataUtil.get(c, fpart);
+			if (p != null && p instanceof IData) {
+				v = findValueInPipelineForKey(lpart, (IData) p);
+			} else {
+				v = null;
+			}
+			
+			c.destroy();
+			
+			return v;
+		} else {
+			IDataCursor c = pipeline.getCursor();
+			Object v = IDataUtil.get(c, key);
+			c.destroy();
+		
+			return v;
+		}
+	}
 }

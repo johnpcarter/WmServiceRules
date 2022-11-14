@@ -36,7 +36,7 @@ public class AllComputers {
 		if (pipelineAttribute != null && pipelineAttribute.length() > 0) {
 			String key = namespace == null ? "*" : namespace;
 			
-			if (eventType != EventType.AuditEvent) {
+			if (eventType == EventType.AuditEvent) {
 				this._pipelineAtributesForAuditEvents.put(key, pipelineAttribute);
 			} else {
 				this._pipelineAtributesForExceptionEvents.put(key, pipelineAttribute);
