@@ -95,7 +95,7 @@ public class ComputersForNamespace {
 
 			for (String namespace : this._computers.keySet()) {
 				
-				if (namespace.equals("*") || service.startsWith(namespace)) {
+				if ((namespace.equals("*") && !this.isServiceCompatibleWithOtherComputers("*", service)) || service.startsWith(namespace)) {
 					ComputersByService cs = this._computers.get(namespace);
 					for (Source source : Source.values()) {
 						if (cs.record(eventType, source, service, duration))
@@ -150,6 +150,21 @@ public class ComputersForNamespace {
 		}
 		
 		return h;
+	}
+	
+	private boolean isServiceCompatibleWithOtherComputers(String filter, String service) {
+		
+		boolean didMatch = false;
+				
+				
+		for (String f : this._computers.keySet()) {
+		
+			if (!f.equals(filter) && service.startsWith(f)) {
+				didMatch = true;
+			}
+		}
+		
+		return didMatch;
 	}
 	
 	private boolean isExcluded(String service) {
