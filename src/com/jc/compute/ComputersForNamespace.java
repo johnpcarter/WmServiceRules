@@ -483,7 +483,7 @@ public class ComputersForNamespace {
 	    		
 	    		for (ComputersByService c : _computers.values()) {
 	    			
-		    		System.out.println("collating ");
+		    		//System.out.println("collating ");
 		    		
 		    		Map<String, Snapshot<Number>> snapshots = c.collateValues(_timeInterval);
 		    	

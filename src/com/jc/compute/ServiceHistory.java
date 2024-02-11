@@ -12,6 +12,7 @@ import java.util.Set;
 import com.jc.compute.Computer.Source;
 import com.jc.compute.ComputersForNamespace.ComputersByService;
 import com.jc.compute.ComputersForNamespace.EventType;
+import com.wm.app.b2b.server.ServerAPI;
 import com.wm.data.IData;
 import com.wm.data.IDataCursor;
 import com.wm.data.IDataFactory;
@@ -111,6 +112,7 @@ public class ServiceHistory {
 		IDataUtil.put(c, "fromDate", startTime);
 		IDataUtil.put(c, "to", formatDate(new Date()));
 		IDataUtil.put(c, "toDate", new Date());
+		IDataUtil.put(c, "serverName", ServerAPI.getServerName() + ":" + ServerAPI.getInstanceName());
 
 		c.destroy();
 		
