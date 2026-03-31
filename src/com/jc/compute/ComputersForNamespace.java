@@ -20,6 +20,8 @@ import com.wm.data.IData;
 
 public class ComputersForNamespace {
 	
+	private static String _oneJobAtAtTime = "singleThreadOnly";
+	
 	public enum EventType {
 		AuditEvent,
 		ExceptionEvent
@@ -524,14 +526,17 @@ public class ComputersForNamespace {
     		
     		String ns = _persistService.substring(0, _persistService.indexOf(":"));
          	String ifc = _persistService.substring(_persistService.indexOf(":")+1);
-
-         	System.out.println("Invoking persistence service " + ns + ":" + ifc);
          	
-    		try {
-    			InvokeServiceRuleAction.invokeService(data, ns, ifc, false);
-    		} catch (UnknownServiceException | ServiceException e) {
-    			ServerAPI.logError(e);
-    		}
+         	synchronized(ComputersForNamespace._oneJobAtAtTime) {
+
+             	System.out.println("Invoking persistence service " + ns + ":" + ifc);
+
+         		try {
+         			InvokeServiceRuleAction.invokeService(data, ns, ifc, false);
+         		} catch (UnknownServiceException | ServiceException e) {
+         			ServerAPI.logError(e);
+         		}
+         	}
 	    }
 	 
 	} // End inner class : CleanupThread
