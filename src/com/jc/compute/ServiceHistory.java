@@ -387,11 +387,11 @@ public class ServiceHistory {
 				for (GroupSnapshot<? extends Number>.Value v : g.values) {
 					
 					if (v.value != null) {
-					if (v.value.doubleValue() > max) {
-						max = v.value.doubleValue();
-					}
+						if (v.value.doubleValue() > max) {
+							max = v.value.doubleValue();
+						}
 					} else {
-						System.out.println("wtf");
+						System.out.println("** WxServiceAlerts ** - null value found for " + this.source.name());
 					}
 				}
 			}

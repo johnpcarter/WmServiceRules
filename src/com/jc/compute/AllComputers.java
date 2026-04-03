@@ -24,12 +24,12 @@ public class AllComputers {
 	private HashMap<String, String> _pipelineAtributesForAuditEvents = new HashMap<String, String>();
 	private HashMap<String, String> _pipelineAtributesForExceptionEvents = new HashMap<String, String>();
 
-	public void add(long timeInterval, EventType eventType, boolean topLevelServicesOnly, int maxSlots, boolean countZeros, String namespace, String pipelineAttribute, Computer<Number> computer, String[] excludeList, String[] includeList, long transactionDuration, String persistService) {
+	public void add(long timeInterval, EventType eventType, boolean topLevelServicesOnly, int maxSlots, boolean countZeros, String namespace, String pipelineAttribute, Computer<Number> computer, String[] excludeList, String[] includeList, long transactionDuration, String persistService, boolean traceRecord) {
 		
 		ComputersForNamespace cti = _computersByTimeInterval.get(timeInterval);
 		
 		if (cti == null) {
-			cti = new ComputersForNamespace(timeInterval, topLevelServicesOnly, maxSlots, countZeros, excludeList, includeList, transactionDuration, persistService);
+			cti = new ComputersForNamespace(timeInterval, topLevelServicesOnly, maxSlots, countZeros, excludeList, includeList, transactionDuration, persistService, traceRecord);
 			_computersByTimeInterval.put(timeInterval, cti);
 		}
 		
@@ -44,6 +44,17 @@ public class AllComputers {
 		}
 		
 		cti.addComputer(eventType, namespace, pipelineAttribute, computer);
+	}
+	
+	public Boolean remove(long timeInterval, String namespace) {
+	
+		ComputersForNamespace cti = _computersByTimeInterval.get(timeInterval);
+
+		if (cti != null) {
+			return cti.removeComputersFor(namespace);
+		} else {
+			return false;
+		}
 	}
 	
 	public String pipelineAttributeForNamespace(EventType eventType, String service) {

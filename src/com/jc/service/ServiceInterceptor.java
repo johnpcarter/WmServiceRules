@@ -53,14 +53,14 @@ public class ServiceInterceptor implements InvokeChainProcessor {
 			
 				// process start and steps need to be tracked using the process info, not the generic service names
 				
-				System.out.println("************* PRT service detected");
+				//System.out.println("** WxServiceAlerts ** - PRT service detected");
 
 				IDataCursor c = pipeline.getCursor();
 				if (c.first() && c.getValue() instanceof IData) {
 					IData payload = (IData) c.getValue();
 					IDataCursor pc = payload.getCursor();
 					
-					System.out.println("************* payload doc is " + c.getKey());
+					//System.out.println("** WxServiceAlerts ** - payload doc is " + c.getKey());
 					
 					if (c.getKey().equals("JMSMessage")) {
 												
@@ -72,16 +72,16 @@ public class ServiceInterceptor implements InvokeChainProcessor {
 							
 							if (docType != null) {
 								serviceName = "bpm_init:" + docType;// + ":" + step;
-							} else {
+							} /* else {
 								propertiesCursor.first();
 								do {
 									System.out.println("************* found " + propertiesCursor.getKey() + " = " + propertiesCursor.getValue());
 								} while (!propertiesCursor.next());
-							}
+							}*/
 							
 							propertiesCursor.destroy();
 
-							System.out.println("************* wm.prt.dispatch:handlePublishedInput - " + serviceName);
+							//System.out.println("** WxServiceAlerts ** - wm.prt.dispatch:handlePublishedInput - " + serviceName);
 
 						} else {
 							
@@ -92,14 +92,14 @@ public class ServiceInterceptor implements InvokeChainProcessor {
 							
 							if (model != null) {
 								serviceName = "bpm_step:" + model;// + ":" + step;
-							} else {
+							} /* else {
 								headerCursor.first();
 								do {
 									System.out.println("************* found " + headerCursor.getKey() + " = " + headerCursor.getValue());
 								} while (!headerCursor.next());
-							}
+							}*/
 							
-							System.out.println("************* wm.prt.dispatch:handleTransition - " + model + " / " + model);						}						
+							System.out.println("** WxServiceAlerts ** - wm.prt.dispatch:handleTransition - " + model + " / " + model);						}						
 					} else {
 					
 						if (serviceName.equals(PRT_START_SERVICE)) {
@@ -111,7 +111,7 @@ public class ServiceInterceptor implements InvokeChainProcessor {
 								serviceName = "bpm_init:" + pc.getKey();
 							}
 							
-							System.out.println("************* wm.prt.dispatch:handlePublishedInput - " + pc.getKey());
+							//System.out.println("** WxServiceAlerts ** - wm.prt.dispatch:handlePublishedInput - " + pc.getKey());
 
 						} else {
 							String model = IDataUtil.getString(pc, PROCESS_MODEL_ID);
@@ -119,20 +119,20 @@ public class ServiceInterceptor implements InvokeChainProcessor {
 							
 							if (model != null) {
 								serviceName += "bpm_step:" + model;// + ":" + step;
-							} else {
+							} /*else {
 								pc.first();
 								do {
-									System.out.println("************* found " + pc.getKey() + " = " + pc.getValue());
+									System.out.println("** WxServiceAlerts ** - found " + pc.getKey() + " = " + pc.getValue());
 								} while (!pc.next());
-							}
+							}*/
 							
-							System.out.println("************* wm.prt.dispatch:handleTransition - " + model + " / " + step);
+							//System.out.println("** WxServiceAlerts ** - wm.prt.dispatch:handleTransition - " + model + " / " + step);
 						}
 					}
 					
 					pc.destroy();
 				} else {
-					System.out.println("************* oops payload is not an IData " + c.getKey());
+					System.out.println("** WxServiceAlerts ** - oops payload is not an IData " + c.getKey());
 				}
 				
 				c.destroy();

@@ -34,7 +34,7 @@ public class ComputersForNamespace {
 		public Stack<Snapshot<Number>> getHistoryForService(String key);
 	}
 	
-	public static int TransactionDuration = 3000;
+	public static int TransactionDuration = 60000;
 
     protected HashMap<String, ComputersByService> _computers = new HashMap<String, ComputersByService>();
     private CleanupThread _cleanupThread = null;
@@ -46,8 +46,9 @@ public class ComputersForNamespace {
 	protected long _transactionDuration = TransactionDuration = 3000;
 	
 	private String _persistService = null;
+	private boolean _traceRecord = false;
 	
-	public ComputersForNamespace(long timeInterval, boolean topLevelServicesOnly, int maxSlots, boolean countZeros, String[] excludeList, String[] includeList, long transactionDuration, String persistService) {
+	public ComputersForNamespace(long timeInterval, boolean topLevelServicesOnly, int maxSlots, boolean countZeros, String[] excludeList, String[] includeList, long transactionDuration, String persistService, boolean traceRecord) {
 	      
 		_maxSlots = maxSlots;
 		_topLevelOnly = topLevelServicesOnly;
@@ -55,6 +56,7 @@ public class ComputersForNamespace {
 	    _countZeros = countZeros;
 	    _excludeList = excludeList;
 	    _persistService = persistService;
+	    _traceRecord = traceRecord;
 	    
 		if (includeList != null) {
 			this._includeList = new HashSet<String>(includeList.length);
@@ -87,6 +89,11 @@ public class ComputersForNamespace {
 		}
 		
 		ec.addComputer(eventType, c);
+	}
+	
+	public boolean removeComputersFor(String namespace) {
+	
+		return _computers.remove(namespace) != null;
 	}
 	
 	public boolean record(EventType eventType, String service, Long duration, boolean isTopLevelService) {
@@ -220,7 +227,7 @@ public class ComputersForNamespace {
 				c.addEventType(eventType);
 			}
 		}
-
+		
 		public Collection<Computer<Number>> getComputers(Source source) {
 			
 			String key = source.toString();
@@ -235,6 +242,10 @@ public class ComputersForNamespace {
 		public boolean record(EventType eventType, Source source, String serviceName, Number value) {
 			
 			ComputersGroupedSource ec = _values.get(serviceName);
+			
+			if (_traceRecord) {
+	    		System.out.println("**WxServiceAlerts** - recording count for (" + eventType + ") "+ source.name() + " = " + value);
+			}
 			
 			if (ec == null) {
 				ec = new ComputersGroupedSource(serviceName);
@@ -482,20 +493,34 @@ public class ComputersForNamespace {
 	    	while (!_requestStop) {
 	        	    		
 	    		ArrayList<ServiceHistory> records = new ArrayList<ServiceHistory>();
+	    		ArrayList<String> recordedServices = new ArrayList<String>();
 	    		
+	    		System.out.println("**WxServiceAlerts** - snapshot thread start");
+
 	    		for (ComputersByService c : _computers.values()) {
 	    			
-		    		//System.out.println("collating ");
+		    		System.out.println("**WxServiceAlerts** - collating snapshots");
 		    		
 		    		Map<String, Snapshot<Number>> snapshots = c.collateValues(_timeInterval);
 		    	
 		    		if (snapshots.size() > 0) {
+		    			
 		    			for (String service : snapshots.keySet()) {
 		    			
-		    				ServiceHistory h = new ServiceHistory(service);
-			    			h.add(null, snapshots.get(service), -1, true);
+		    				// different computers may capture stats for the same service if namespace overlaps
+		    				// only record first instance, ignore others to avoid duplicates
+		    				
+		    				if (!recordedServices.contains(service)) {
+		    					
+					    		System.out.println("**WxServiceAlerts** - collating counts for " + service);
 
-			    			records.add(h);
+		    					recordedServices.add(service);
+		    					
+		    					ServiceHistory h = new ServiceHistory(service);
+				    			h.add(null, snapshots.get(service), -1, true);
+
+				    			records.add(h);	
+		    				}
 		    			}
 		    		}
 	    		}
@@ -504,6 +529,8 @@ public class ComputersForNamespace {
 	    			persistTotals(records);
 	    		}
 	    		
+	    		System.out.println("**WxServiceAlerts** - snapshot thread end");
+
 	            try {
 	            	sleep(_timeInterval);
 	            } catch (InterruptedException e) {
@@ -529,7 +556,7 @@ public class ComputersForNamespace {
          	
          	synchronized(ComputersForNamespace._oneJobAtAtTime) {
 
-             	System.out.println("Invoking persistence service " + ns + ":" + ifc);
+             	System.out.println("**WxServiceAlerts** - Invoking persistence service " + ns + ":" + ifc);
 
          		try {
          			InvokeServiceRuleAction.invokeService(data, ns, ifc, false);
